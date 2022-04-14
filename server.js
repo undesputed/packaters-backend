@@ -51,11 +51,25 @@ app.post('/api/user/login', function(req, res){
 })
 
 app.get('/api/retrieve/services', (req, res) => {
-    conn.query('SELECT * FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
+    conn.query('SELECT *, pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
         if(error) console.log(error);
         else{
             console.log(rows);
             res.send(rows);
+            res.end();
+        }
+    })
+})
+
+app.post('/api/retrieve/services', (req, res) =>{
+    let id = req.body.id;
+    console.log(id);
+    conn.query('SELECT *, pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id WHERE pack_service.id = ?', [id], function(error, rows, fields){
+        if(error) console.log(error);
+        else{
+            console.log(rows);
+            res.send(rows);
+            res.end();
         }
     })
 })
