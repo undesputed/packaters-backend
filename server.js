@@ -2,12 +2,96 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mysql = require('mysql');
+const engines = require("consolidate");
+const paypal = require("paypal-rest-sdk");
 
 const app = express();
 
 app.use(cors());
+app.engine("ejs", engines.ejs);
+app.set("views", "./views");
+app.set("view engine", "ejs");
 //parse application/json
 app.use(bodyParser.json());
+
+paypal.configure({
+    'mode': 'sandbox', //sandbox or live
+    'client_id': 'AR2W7vYUKaCLGORkiZKcpl3J9A9u4w7sJobOFdgABictfda7YyZgZOAqtrYmbOefo01Wo7QoPe8L3Vkm',
+    'client_secret': 'EOSCAMy8NdbJ-9rGHxauIVcfqJEVAf8Heomak3KC5da43TMo8lfISy9Dz-5qUZCjuqK9PilnCRT6XCns'
+});
+
+
+app.get('/paypal', (req,res) => {
+    var create_payment_json = {
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        "redirect_urls": {
+            "return_url": "http://192.168.0.101:3000/success",
+            "cancel_url": "http://192.168.0.101:3000/cancel"
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": "item",
+                    "sku": "item",
+                    "price": "1.00",
+                    "currency": "USD",
+                    "quantity": 1
+                }]
+            },
+            "amount": {
+                "currency": "USD",
+                "total": "1.00"
+            },
+            "description": "This is the payment description."
+        }]
+    };
+    
+    
+    paypal.payment.create(create_payment_json, function (error, payment) {
+        if (error) {
+            throw error;
+        } else {
+            console.log("Create Payment Response");
+            console.log(payment);
+            res.redirect(payment.links[1].href);
+        }
+    });
+});
+
+app.get('/success', (req,res) => {
+    // res.send('Success');
+    var PayerID = req.query.PayerID;
+    var paymentId = req.query.paymentId;
+
+    var execute_payment_json = {
+        "payer_id": PayerID,
+        "transactions": [{
+            "amount": {
+                "currency": "USD",
+                "total": "1.00"
+            }
+        }]
+    };
+    
+    
+    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            throw error;
+        } else {
+            console.log("Get Payment Response");
+            console.log(JSON.stringify(payment));
+            res.render('success');
+        }
+    });
+});
+
+app.get('/cancel', (req,res) => {
+    res.render('cancel');
+});
 
 //create a database connection
 const conn = mysql.createConnection({
@@ -76,7 +160,7 @@ app.post('/api/user/registration', function(req, res) {
 })
 
 app.get('/api/retrieve/services', (req, res) => {
-    conn.query('SELECT *, pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
+    conn.query('SELECT *, pack_service.path_image as service_image, pack_caterer.path_image as cat_image,  pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
         if(error) console.log(error);
         else{
             console.log(rows);
@@ -89,8 +173,22 @@ app.get('/api/retrieve/services', (req, res) => {
 app.post('/api/retrieve/services', (req, res) =>{
     let id = req.body.id;
     console.log(id);
-    conn.query('SELECT *, pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id WHERE pack_service.id = ?', [id], function(error, rows, fields){
+    conn.query('SELECT *, pack_service.path_image as service_image, pack_caterer.path_image as cat_image, pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id WHERE pack_service.id = ?', [id], function(error, rows, fields){
         if(error) console.log(error);
+        else{
+            console.log(rows);
+            res.send(rows);
+            res.end();
+        }
+    })
+})
+
+app.post('/api/retrieve/menu', (req, res) => {
+    let id = req.body.id;
+    console.log(id);
+    conn.query('SELECT *, pack_service.id as id, pack_service.id as service_id FROM `pack_menu` inner join pack_service on pack_menu.pack_service_id = pack_service.id where pack_menu.pack_service_id = ?', [id],
+    function(error, rows, fields){
+        if(error) throw error;
         else{
             console.log(rows);
             res.send(rows);
