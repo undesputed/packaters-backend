@@ -20,6 +20,9 @@ paypal.configure({
     'client_secret': 'EOSCAMy8NdbJ-9rGHxauIVcfqJEVAf8Heomak3KC5da43TMo8lfISy9Dz-5qUZCjuqK9PilnCRT6XCns'
 });
 
+app.get('/', (req, res) => {
+    res.render('index');
+})
 
 app.get('/paypal', (req,res) => {
     var create_payment_json = {
@@ -28,8 +31,8 @@ app.get('/paypal', (req,res) => {
             "payment_method": "paypal"
         },
         "redirect_urls": {
-            "return_url": "http://192.168.0.101:3000/success",
-            "cancel_url": "http://192.168.0.101:3000/cancel"
+            "return_url": "http://192.168.0.173:3000/success",
+            "cancel_url": "http://192.168.0.173:3000/cancel"
         },
         "transactions": [{
             "item_list": {
@@ -74,7 +77,7 @@ app.get('/success', (req,res) => {
                 "total": "1.00"
             }
         }]
-    };
+    }; 
     
     
     paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
@@ -188,6 +191,18 @@ app.post('/api/retrieve/menu', (req, res) => {
     console.log(id);
     conn.query('SELECT *, pack_service.id as id, pack_service.id as service_id FROM `pack_menu` inner join pack_service on pack_menu.pack_service_id = pack_service.id where pack_menu.pack_service_id = ?', [id],
     function(error, rows, fields){
+        if(error) throw error;
+        else{
+            console.log(rows);
+            res.send(rows);
+            res.end();
+        }
+    })
+})
+
+app.post('/api/retrieve/servicePrice', (req, res) => {
+    let id = req.body.id;
+    conn.query('SELECT service_price from pack_service where id = ?', [id], function(error, rows, fields){
         if(error) throw error;
         else{
             console.log(rows);
