@@ -6,6 +6,13 @@ const engines = require("consolidate");
 const paypal = require("paypal-rest-sdk");
 
 const app = express();
+//create a database connection
+const conn = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'packaters'
+});
 
 app.use(cors());
 app.engine("ejs", engines.ejs);
@@ -85,9 +92,24 @@ app.get('/success', (req,res) => {
             console.log(error.response);
             throw error;
         } else {
-            console.log("Get Payment Response");
-            console.log(JSON.stringify(payment));
-            res.render('success');
+            let method = payment.payer.payment_method;
+            let payment_id = payment.id;
+            let email = payment.payer.payer_info.email;
+            let first_name = payment.payer.payer_info.first_name;
+            let last_name = payment.payer.payer_info.last_name;
+            let payer_id = payment.payer.payer_info.payer_id;
+            let status = payment.payer.status;
+
+            conn.query('INSERT INTO pack_paypal (pack_service_id, pack_customer_id, payment_method, payment_id, email, first_name, last_name, payer_id, status) VALUES(?,?,?,?,?,?,?,?,?)',
+            [0 , 0, method, payment_id, email, first_name, last_name, payer_id, status], function(error, results, fields) {
+                if(error) throw error;
+                else{
+                    console.log(results);
+                    console.log("Get Payment Response");
+                    console.log(JSON.stringify(payment));
+                    res.render('success');
+                }
+            })
         }
     });
 });
@@ -96,13 +118,6 @@ app.get('/cancel', (req,res) => {
     res.render('cancel');
 });
 
-//create a database connection
-const conn = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'packaters'
-});
 
 //connect to database
 conn.connect((err) => {
@@ -162,6 +177,19 @@ app.post('/api/user/registration', function(req, res) {
     }
 })
 
+app.post('/api/user/user', function(req, res) {
+    console.log(req.body);
+    let username = req.body.username;
+    conn.query('SELECT id FROM pack_customer WHERE username = ?', [username], function(error, rows, fields){
+        if(error) throw error;
+        else{
+            res.send(rows);
+            console.log(rows);
+            res.end();
+        }
+    })
+})
+
 app.get('/api/retrieve/services', (req, res) => {
     conn.query('SELECT *, pack_service.path_image as service_image, pack_caterer.path_image as cat_image,  pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
         if(error) console.log(error);
@@ -211,3 +239,32 @@ app.post('/api/retrieve/servicePrice', (req, res) => {
         }
     })
 })
+
+app.get('/api/retrieve/menu', (req, res) => {
+    conn.query('SELECT * FROM pack_menu', function(error, rows, fields) {
+        if(error) throw error;
+        else{
+            console.log(rows);
+            res.send(rows);
+            res.end();
+        }
+    })
+})
+
+app.get('/api/retrieve/transactions', (req, res) => {
+    conn.query('SELECT *, pack_transaction.status as statuses FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id)',
+        function(error, rows, fields) {
+            if(error) throw error;
+            else{
+                console.log(rows);
+                res.send(rows);
+                res.end();
+            }
+        })
+})
+
+// app.post('api/update/paypal', (req, res) => {
+//     var dataj = {pack_service_id: req.body.pack_service_id, pack_customer_id:req.body.pack_customer_id};
+//     var sql = 'UPDATE pack_paypal SET ? where payment_id = ? '
+//     conn.query('UPDATE pack_paypal ')
+// })
