@@ -180,7 +180,7 @@ app.post('/api/user/registration', function(req, res) {
 app.post('/api/user/user', function(req, res) {
     console.log(req.body);
     let username = req.body.username;
-    conn.query('SELECT id FROM pack_customer WHERE username = ?', [username], function(error, rows, fields){
+    conn.query('SELECT id, cust_name, cust_lastname, cust_address, username, password FROM pack_customer WHERE username = ?', [username], function(error, rows, fields){
         if(error) throw error;
         else{
             res.send(rows);
@@ -261,6 +261,34 @@ app.get('/api/retrieve/transactions', (req, res) => {
                 res.end();
             }
         })
+})
+
+app.post('/api/create/transaction', (req, res) => {
+    let package_name = req.body.package_name;
+    let pack_address = req.body.pack_address;
+    let pack_date = req.body.pack_date;
+    let pack_time = req.body.pack_time;
+    let pack_caterer_id = req.body.pack_caterer_id;
+    let customer_id = req.body.customer_id;
+    let customer_fname = req.body.customer_fname;
+    let customer_lname = req.body.customer_lname
+    let package_id = req.body.package_id;
+    let price = req.body.price;
+    let notification = 1;
+    let status = 'pending';
+
+    conn.query(
+        'INSERT INTO pack_transaction (package_name, pack_address, pack_date, pack_time, pack_caterer_id, customer_id, customer_fname, customer_lname, package_id, price, notification, status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
+        [package_name, pack_address, pack_date, pack_time, pack_caterer_id, customer_id, customer_fname, customer_lname, package_id, price, notification, status],
+        function(error, rows, fields) {
+            if(error) throw error;
+            else{
+                res.send(rows);
+                console.log(rows);
+                res.end();
+            }
+        }
+    )
 })
 
 // app.post('api/update/paypal', (req, res) => {
