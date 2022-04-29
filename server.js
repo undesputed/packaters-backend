@@ -252,7 +252,7 @@ app.get('/api/retrieve/menu', (req, res) => {
 })
 
 app.get('/api/retrieve/transactions', (req, res) => {
-    conn.query('SELECT *, pack_transaction.status as statuses FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id)',
+    conn.query('SELECT *, pack_transaction.status as statuses FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id) order by pack_transaction.id desc',
         function(error, rows, fields) {
             if(error) throw error;
             else{
