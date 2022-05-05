@@ -291,6 +291,102 @@ app.post('/api/create/transaction', (req, res) => {
     )
 })
 
+app.get('/api/retrieve/caterer', (req, res) => {
+    conn.query('select * from pack_caterer', function(error, rows, fields) {
+        if(error) throw error;
+        else{
+            res.send(rows);
+            console.log(rows);
+            res.end();
+        }
+    })
+})
+
+app.post('/api/retrieve/comment', (req, res) => {
+    let id = req.body.id;
+    conn.query(
+        'SELECT * FROM pack_comment WHERE pack_caterer_id = ?',
+        [id],
+        function(error, rows, fields) {
+            if(error) throw error;
+            else{
+                res.send(rows);
+                console.log(rows);
+                res.end();
+            }
+        }
+    )
+})
+
+app.post('/api/retrieve/caterer', (req, res) => {
+    let id = req.body.id;
+    conn.query(
+        'SELECT * FROM pack_caterer WHERE id = ?',
+        [id],
+        function(error, rows, fields) {
+            if(error) throw error;
+            else{
+                res.send(rows);
+                console.log(rows);
+                res.end();
+            }
+        }
+    )
+})
+
+app.post('/api/retrieve/totalComment', (req, res) => {
+    let id = req.body.id;
+    conn.query(
+        'SELECT COUNT(id) AS total FROM pack_comment WHERE pack_caterer_id = ?',
+        [id],
+        function(error, rows, fields) {
+            if(error) throw error;
+            else {
+                res.send(rows);
+                console.log(rows);
+                res.send();
+            }
+        }
+    )
+})
+
+app.post('/api/retrieve/totalServices', (req, res) => {
+    let id = req.body.id;
+    conn.query(
+        'SELECT COUNT(id) AS totalService FROM pack_service WHERE pack_caterer_id = ?',
+        [id],
+        function(error, rows, fields){
+            if(error) throw error;
+            else{
+                res.send(rows);
+                console.log(rows);
+                res.send();
+            }
+        }
+    )
+})
+
+app.post('/api/create/comment', (req, res) => {
+    console.log(req.body);
+    let comment = req.body.comment;
+    let pack_customer_name = req.body.pack_customer_name;
+    let pack_customer_lname = req.body.pack_customer_lname;
+    let pack_caterer_id = req.body.pack_caterer_id;
+    let pack_customer_id = req.body.pack_customer_id;
+    let notification = 1;
+    let soft_delete = 0;
+    conn.query('INSERT INTO pack_comment(comment, pack_customer_name, pack_customer_lname, pack_caterer_id, pack_customer_id, notification, soft_delete) VALUES(?,?,?,?,?,?,?)',
+        [comment, pack_customer_name, pack_customer_lname, pack_caterer_id, pack_customer_id, notification, soft_delete],
+        function(error, rows, fields) {
+            if(error) throw error;
+            else{ 
+                console.log(rows);
+                res.send(rows);
+                res.end();
+            }
+        }
+    )
+})
 // app.post('api/update/paypal', (req, res) => {
 //     var dataj = {pack_service_id: req.body.pack_service_id, pack_customer_id:req.body.pack_customer_id};
 //     var sql = 'UPDATE pack_paypal SET ? where payment_id = ? '
