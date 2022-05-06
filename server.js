@@ -191,7 +191,7 @@ app.post('/api/user/user', function(req, res) {
 })
 
 app.get('/api/retrieve/services', (req, res) => {
-    conn.query('SELECT *, pack_service.path_image as service_image, pack_caterer.path_image as cat_image,  pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id', function(error, rows, fields){
+    conn.query('SELECT *, pack_service.path_image as service_image, pack_caterer.path_image as cat_image,  pack_service.id as id, pack_caterer.id as cat_id FROM pack_service INNER JOIN pack_caterer on pack_service.pack_caterer_id = pack_caterer.id order by pack_service.id desc', function(error, rows, fields){
         if(error) console.log(error);
         else{
             console.log(rows);
@@ -305,7 +305,7 @@ app.get('/api/retrieve/caterer', (req, res) => {
 app.post('/api/retrieve/comment', (req, res) => {
     let id = req.body.id;
     conn.query(
-        'SELECT * FROM pack_comment WHERE pack_caterer_id = ?',
+        'SELECT * FROM pack_comment WHERE pack_caterer_id = ? ORDER BY id desc',
         [id],
         function(error, rows, fields) {
             if(error) throw error;
