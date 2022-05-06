@@ -177,6 +177,26 @@ app.post('/api/user/registration', function(req, res) {
     }
 })
 
+app.post('/api/update/customer', function(req, res) {
+    let id = req.body.id;
+    let firstname = req.body.firstname;
+    let lastname = req.body.lastname;
+    let phonenum = req.body.phonenum;
+    let addr = req.body.address;
+    let username = req.body.username;
+    let password = req.body.password;
+
+    conn.query('UPDATE pack_customer SET cust_name = ?, cust_lastname = ? , cust_phonenum = ? , cust_address = ?, username = ?, password=? where id = ?',
+    [firstname, lastname,phonenum,addr,username,password,id], function(error, rows, fields) {
+        if(error) throw error;
+        else{ 
+            console.log(rows);
+            res.send(rows);
+            res.end();
+        }
+    })
+})
+
 app.post('/api/user/user', function(req, res) {
     console.log(req.body);
     let username = req.body.username;
