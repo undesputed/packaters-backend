@@ -273,7 +273,7 @@ app.get('/api/retrieve/menu', (req, res) => {
 
 app.post('/api/retrieve/transactions', (req, res) => {
     let id = req.body.id;
-    conn.query('SELECT *, pack_transaction.status as statuses, pack_service.path_image AS service_image, pack_caterer.path_image AS cat_image FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id) WHERE pack_transaction.customer_id = ? order by pack_transaction.id desc',
+    conn.query('SELECT *, pack_transaction.id as trans_id, pack_transaction.status as statuses, pack_service.path_image AS service_image, pack_caterer.path_image AS cat_image FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id) WHERE pack_transaction.customer_id = ? order by pack_transaction.id desc',
         [id],
         function(error, rows, fields) {
             if(error) throw error;
@@ -326,6 +326,40 @@ app.post('/api/create/transaction', (req, res) => {
         }
     )
 })
+
+app.put('/api/update/transactions', function(req, res) {
+    let pack_date = req.body.pack_date;
+    let pack_time = req.body.pack_time;
+    let pack_address = req.body.pack_address;
+    let id = req.body.id;
+
+    conn.query('UPDATE pack_transaction SET pack_date = ? , pack_time = ?, pack_address = ? WHERE id = ? ',
+    [pack_date, pack_time, pack_address,id], 
+    function(error, rows, fields) {
+        if(error) throw error;
+        else {
+            console.log(rows);
+            res.send(rows)
+            res.end();
+        }
+    })
+})
+
+app.put('/api/update/transaction/status', function(req, res) {
+    let status = "Cancelled";
+    let id = req.body.id;
+
+    conn.query('UPDATE pack_transaction SET status = ? WHERE id = ?',
+    [status, id], function(error, rows, fields) {
+        if(error) throw error;
+        else {
+            console.log(rows);
+            res.send(rows);
+            res.end();
+        }
+    })
+})
+
 
 app.get('/api/retrieve/caterer', (req, res) => {
     conn.query('select * from pack_caterer', function(error, rows, fields) {
