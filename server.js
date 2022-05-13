@@ -273,7 +273,7 @@ app.get('/api/retrieve/menu', (req, res) => {
 
 app.post('/api/retrieve/transactions', (req, res) => {
     let id = req.body.id;
-    conn.query('SELECT *, pack_transaction.status as statuses FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id) WHERE pack_transaction.customer_id = ? order by pack_transaction.id desc',
+    conn.query('SELECT *, pack_transaction.status as statuses, pack_service.path_image AS service_image, pack_caterer.path_image AS cat_image FROM (((pack_transaction INNER JOIN pack_service ON pack_transaction.package_id = pack_service.id) INNER JOIN pack_customer ON pack_transaction.customer_id = pack_customer.id) INNER JOIN pack_caterer ON pack_transaction.pack_caterer_id = pack_caterer.id) WHERE pack_transaction.customer_id = ? order by pack_transaction.id desc',
         [id],
         function(error, rows, fields) {
             if(error) throw error;
@@ -283,6 +283,20 @@ app.post('/api/retrieve/transactions', (req, res) => {
                 res.end();
             }
         })
+})
+
+app.post('/api/retrieve/reorder', (req, res) => {
+    let id = req.body.id;
+    conn.query('SELECT * FROM pack_transaction inner JOIN pack_service ON pack_transaction.package_id = pack_service.id WHERE pack_transaction.customer_id = ?',
+    [id],
+    function(error, rows, fields) {
+        if(error) throw error;
+        else {
+            console.log(rows);
+            res.send(rows);
+            res.end()
+        }
+    })
 })
 
 app.post('/api/create/transaction', (req, res) => {
